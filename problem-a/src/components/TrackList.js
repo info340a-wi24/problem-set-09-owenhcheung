@@ -1,42 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-const TRACK_QUERY_TEMPLATE = 'https://itunes.apple.com/lookup?id={collectionId}&limit=50&entity=song'
+const TRACK_QUERY_TEMPLATE = 'https://itunes.apple.com/lookup?id={collectionId}&limit=50&entity=song';
 
-export default function TrackList({setAlertMessage}) { //setAlertMessage callback as prop
-  const [trackData, setTrackData] = useState([]); //tracks to show
-  const [isQuerying, setIsQuerying] = useState(false); //for spinner
-  const [previewAudio, setPreviewAudio] = useState(null); //for playing previews!
+export default function TrackList({ setAlertMessage }) {
+  const [trackData, setTrackData] = useState([]);
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [previewAudio, setPreviewAudio] = useState(null);
 
-  const urlParams = useParams(); //get album from URL
+  const urlParams = useParams();
 
-  //YOUR CODE GOES HERE
+  useEffect(() => {
+    setIsQuerying(true); 
+    setAlertMessage(null); 
 
+    const url = TRACK_QUERY_TEMPLATE.replace('{collectionId}', urlParams.collectionId);
 
-  //for fun: allow for clicking to play preview audio!
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.results.length === 0) {
+          setAlertMessage('No tracks found for album.');
+        } else {
+         
+          const trackArray = data.results.slice(1);
+          setTrackData(trackArray);
+        }
+      })
+      .catch(error => {
+        setAlertMessage(error.message);
+      })
+      .finally(() => {
+        setIsQuerying(false); 
+      });
+  }, [urlParams.collectionId, setAlertMessage]); 
+
   const togglePlayingPreview = (previewUrl) => {
-    if(!previewAudio) { //nothing playing now
+    if (!previewAudio) {
       const newPreview = new Audio(previewUrl);
-      newPreview.addEventListener('ended', () => setPreviewAudio(null)) //stop on end
-      setPreviewAudio(newPreview); //rerender and save
-      newPreview.play(); //also start playing
+      newPreview.addEventListener('ended', () => setPreviewAudio(null));
+      setPreviewAudio(newPreview);
+      newPreview.play();
     } else {
-      previewAudio.pause(); //stop whatever is currently playing
-      setPreviewAudio(null); //remove it
+      previewAudio.pause();
+      setPreviewAudio(null);
     }
   }
 
-  //sort by track number
-  trackData.sort((trackA, trackB) => trackA.trackNumber - trackB.trackNumber)
+  trackData.sort((trackA, trackB) => trackA.trackNumber - trackB.trackNumber);
 
-  //render the track elements
   const trackElemArray = trackData.map((track) => {
     let classList = "track-record";
-    if(previewAudio && previewAudio.src === track.previewUrl){
-      classList += " fa-spin"; //spin if previewing
+    if (previewAudio && previewAudio.src === track.previewUrl){
+      classList += " fa-spin";
     }
 
     return (
@@ -48,7 +72,7 @@ export default function TrackList({setAlertMessage}) { //setAlertMessage callbac
         <p className="text-center">Track {track.trackNumber}</p>
       </div>      
     )
-  })
+  });
 
   return (
     <div>

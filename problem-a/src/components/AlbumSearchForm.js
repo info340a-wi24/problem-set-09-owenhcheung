@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner, faMusic } from '@fortawesome/free-solid-svg-icons';
 
-//icons
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faMusic } from '@fortawesome/free-solid-svg-icons'
-
-export default function AlbumSearchForm({searchCallback, isWaiting}) {
+export default function AlbumSearchForm({ searchCallback, isWaiting }) {
   const [queryText, setQueryText] = useState('');
 
   const handleChange = (event) => {
@@ -13,7 +11,8 @@ export default function AlbumSearchForm({searchCallback, isWaiting}) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
+    const encodedQueryText = encodeURIComponent(queryText);
+    searchCallback(encodedQueryText);
   }
 
   return (
